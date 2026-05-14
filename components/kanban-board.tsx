@@ -543,7 +543,7 @@ export function KanbanBoard() {
                     <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
                       <Card
-                        className={`w-80 h-[640px] max-h-[calc(100vh-260px)] min-h-[500px] flex-shrink-0 flex flex-col transition-all duration-200 ${
+                        className={`w-80 h-[calc(100vh-390px)] min-h-[360px] flex-shrink-0 flex flex-col transition-all duration-200 ${
                           snapshot.isDraggingOver
                             ? "bg-gradient-to-b from-blue-50 to-blue-100 border-blue-300 shadow-lg transform scale-105"
                             : "hover:shadow-md"
