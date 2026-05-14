@@ -573,7 +573,7 @@ export function KanbanBoard() {
                         <CardContent
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className="flex-1 space-y-2 overflow-y-auto px-3 pb-3 pr-2"
+                          className="kanban-column-scroll flex-1 min-h-0 space-y-2 overflow-y-scroll px-3 pb-3 pr-2"
                         >
                           {leadsVisiveis.map((lead, index) => (
                             <Draggable key={lead.id} draggableId={lead.id.toString()} index={index}>
@@ -660,7 +660,9 @@ export function KanbanBoard() {
                               <div className="text-xs mt-1">Arraste leads aqui</div>
                             </div>
                           )}
-                          {cardsRestantes > 0 && (
+                        </CardContent>
+                        {cardsRestantes > 0 && (
+                          <div className="border-t bg-white p-3">
                             <Button
                               type="button"
                               variant="outline"
@@ -670,8 +672,8 @@ export function KanbanBoard() {
                             >
                               Carregar mais ({cardsRestantes} restantes)
                             </Button>
-                          )}
-                        </CardContent>
+                          </div>
+                        )}
                       </Card>
                     )}
                     </Droppable>
