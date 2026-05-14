@@ -475,9 +475,10 @@ export function KanbanBoard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-3 xl:grid-cols-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <label className="text-xs text-gray-600 mb-1 block">Busca</label>
+                  <Search className="absolute left-3 top-8 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Buscar por nome, telefone ou vendedor..."
                     value={searchTerm}
@@ -485,6 +486,8 @@ export function KanbanBoard() {
                     className="pl-10"
                   />
                 </div>
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">Origem</label>
                 <Select value={filterOrigem} onValueChange={setFilterOrigem}>
                   <SelectTrigger>
                     <SelectValue placeholder="Filtrar por origem" />
@@ -498,6 +501,9 @@ export function KanbanBoard() {
                     ))}
                   </SelectContent>
                 </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">Estágio</label>
                 <Select value={filterEstagio} onValueChange={setFilterEstagio}>
                   <SelectTrigger>
                     <SelectValue placeholder="Filtrar por estágio" />
@@ -511,6 +517,7 @@ export function KanbanBoard() {
                     ))}
                   </SelectContent>
                 </Select>
+                </div>
                 <div>
                   <label className="text-xs text-gray-600 mb-1 block">Data Inicio</label>
                   <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
