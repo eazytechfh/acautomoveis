@@ -33,6 +33,8 @@ import { EditableVeiculoField } from "./editable-veiculo-field"
 import { EditableEmailField } from "./editable-email-field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+const LEADS_POR_PAGINA = 50
+
 interface LeadsListViewProps {
   leads: Lead[]
   onLeadsUpdate: () => void
@@ -47,6 +49,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
   const [updatingStage, setUpdatingStage] = useState<number | null>(null)
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [paginaAtual, setPaginaAtual] = useState(1)
 
   React.useEffect(() => {
     filterLeads()
@@ -73,6 +76,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
     }
 
     setFilteredLeads(filtered)
+    setPaginaAtual(1)
   }
 
   const handleStageChange = async (leadId: number, newStage: string, currentStage: string) => {
@@ -208,6 +212,12 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
   }
 
   const origens = [...new Set(leads.map((lead) => lead.origem).filter(Boolean))]
+  const totalPaginas = Math.max(1, Math.ceil(filteredLeads.length / LEADS_POR_PAGINA))
+  const paginaAtualSegura = Math.min(paginaAtual, totalPaginas)
+  const inicioPagina = (paginaAtualSegura - 1) * LEADS_POR_PAGINA
+  const leadsPaginados = filteredLeads.slice(inicioPagina, inicioPagina + LEADS_POR_PAGINA)
+  const primeiroItem = filteredLeads.length === 0 ? 0 : inicioPagina + 1
+  const ultimoItem = Math.min(inicioPagina + LEADS_POR_PAGINA, filteredLeads.length)
 
   return (
     <div className="space-y-6">
@@ -308,7 +318,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map((lead) => (
+                {leadsPaginados.map((lead) => (
                   <TableRow key={lead.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">
                       <div>
@@ -387,6 +397,37 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
           {filteredLeads.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum lead encontrado com os filtros aplicados.</p>
+            </div>
+          )}
+
+          {filteredLeads.length > 0 && (
+            <div className="flex flex-col gap-3 border-t pt-4 mt-4 md:flex-row md:items-center md:justify-between">
+              <p className="text-sm text-gray-600">
+                Mostrando {primeiroItem}-{ultimoItem} de {filteredLeads.length} leads
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaginaAtual((pagina) => Math.max(1, pagina - 1))}
+                  disabled={paginaAtualSegura === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-gray-600">
+                  Página {paginaAtualSegura} de {totalPaginas} · {LEADS_POR_PAGINA} por página
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaginaAtual((pagina) => Math.min(totalPaginas, pagina + 1))}
+                  disabled={paginaAtualSegura === totalPaginas}
+                >
+                  Próxima
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

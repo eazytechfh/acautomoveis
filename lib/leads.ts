@@ -51,19 +51,37 @@ export const VALID_ESTAGIOS = [
 
 export async function getLeads(idEmpresa: number): Promise<Lead[]> {
   const supabase = createClient()
+  const pageSize = 1000
+  let from = 0
+  let allLeads: Lead[] = []
 
-  const { data, error } = await supabase
-    .from("BASE_DE_LEADS")
-    .select("*")
-    .eq("id_empresa", idEmpresa)
-    .order("created_at", { ascending: false })
+  while (true) {
+    const { data, error } = await supabase
+      .from("BASE_DE_LEADS")
+      .select("*")
+      .eq("id_empresa", idEmpresa)
+      .order("created_at", { ascending: false })
+      .range(from, from + pageSize - 1)
 
-  if (error) {
-    console.error("Error fetching leads:", error)
-    return []
+    if (error) {
+      console.error("Error fetching leads:", error)
+      return allLeads
+    }
+
+    if (!data || data.length === 0) {
+      break
+    }
+
+    allLeads = [...allLeads, ...data]
+
+    if (data.length < pageSize) {
+      break
+    }
+
+    from += pageSize
   }
 
-  return data || []
+  return allLeads
 }
 
 export async function updateLeadStage(leadId: number, newStage: string): Promise<boolean> {
