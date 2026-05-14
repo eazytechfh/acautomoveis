@@ -59,6 +59,8 @@ const COLUNAS_KANBAN = [
   "follow_up",
 ]
 
+const CARDS_POR_ETAPA = 20
+
 export function KanbanBoard() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([])
@@ -73,6 +75,7 @@ export function KanbanBoard() {
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null)
   const [movingLead, setMovingLead] = useState<number | null>(null)
   const [deletingLead, setDeletingLead] = useState<number | null>(null)
+  const [cardsVisiveisPorEtapa, setCardsVisiveisPorEtapa] = useState<Record<string, number>>({})
 
   useEffect(() => {
     loadLeads()
@@ -363,6 +366,17 @@ export function KanbanBoard() {
     return stageLeads.reduce((total, lead) => total + (lead.valor || 0), 0)
   }
 
+  const getCardsVisiveis = (stage: string) => {
+    return cardsVisiveisPorEtapa[stage] ?? CARDS_POR_ETAPA
+  }
+
+  const handleCarregarMais = (stage: string) => {
+    setCardsVisiveisPorEtapa((prev) => ({
+      ...prev,
+      [stage]: (prev[stage] ?? CARDS_POR_ETAPA) + CARDS_POR_ETAPA,
+    }))
+  }
+
   const origens = [...new Set(leads.map((lead) => lead.origem).filter(Boolean))]
 
   const handleLeadsUpdate = () => {
@@ -519,11 +533,17 @@ export function KanbanBoard() {
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="overflow-x-auto">
               <div className="flex gap-4 min-w-max pb-4">
-                {COLUNAS_KANBAN.map((stage) => (
-                  <Droppable key={stage} droppableId={stage}>
+                {COLUNAS_KANBAN.map((stage) => {
+                  const stageLeads = getLeadsByStage(stage)
+                  const cardsVisiveis = getCardsVisiveis(stage)
+                  const leadsVisiveis = stageLeads.slice(0, cardsVisiveis)
+                  const cardsRestantes = stageLeads.length - leadsVisiveis.length
+
+                  return (
+                    <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
                       <Card
-                        className={`w-80 min-h-[500px] flex-shrink-0 transition-all duration-200 ${
+                        className={`w-80 h-[640px] max-h-[calc(100vh-260px)] min-h-[500px] flex-shrink-0 flex flex-col transition-all duration-200 ${
                           snapshot.isDraggingOver
                             ? "bg-gradient-to-b from-blue-50 to-blue-100 border-blue-300 shadow-lg transform scale-105"
                             : "hover:shadow-md"
@@ -537,7 +557,7 @@ export function KanbanBoard() {
                             </span>
                             <div className="flex flex-col items-end gap-1">
                               <Badge variant="secondary" className="text-xs">
-                                {getLeadsByStage(stage).length}
+                                {stageLeads.length}
                               </Badge>
                               <Badge variant="outline" className="text-xs text-green-600 border-green-200">
                                 {formatCurrency(getStageTotal(stage))}
@@ -550,8 +570,12 @@ export function KanbanBoard() {
                             </div>
                           )}
                         </CardHeader>
-                        <CardContent ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                          {getLeadsByStage(stage).map((lead, index) => (
+                        <CardContent
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex-1 space-y-2 overflow-y-auto px-3 pb-3 pr-2"
+                        >
+                          {leadsVisiveis.map((lead, index) => (
                             <Draggable key={lead.id} draggableId={lead.id.toString()} index={index}>
                               {(provided, snapshot) => (
                                 <Card
@@ -630,17 +654,29 @@ export function KanbanBoard() {
                           {provided.placeholder}
 
                           {/* Placeholder quando vazio */}
-                          {getLeadsByStage(stage).length === 0 && (
+                          {stageLeads.length === 0 && (
                             <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                               <div className="text-xs">Nenhum lead neste estágio</div>
                               <div className="text-xs mt-1">Arraste leads aqui</div>
                             </div>
                           )}
+                          {cardsRestantes > 0 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-dashed text-xs text-blue-600 hover:text-blue-700"
+                              onClick={() => handleCarregarMais(stage)}
+                            >
+                              Carregar mais ({cardsRestantes} restantes)
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                     )}
-                  </Droppable>
-                ))}
+                    </Droppable>
+                  )
+                })}
               </div>
             </div>
           </DragDropContext>
