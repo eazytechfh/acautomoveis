@@ -84,6 +84,58 @@ export async function getLeads(idEmpresa: number): Promise<Lead[]> {
   return allLeads
 }
 
+function escapeCsvValue(value: unknown) {
+  const stringValue = value === null || value === undefined ? "" : String(value)
+  return `"${stringValue.replace(/"/g, '""')}"`
+}
+
+export function exportLeadsCsv(leads: Lead[], filename = "leads.csv") {
+  const headers = [
+    "ID",
+    "Nome",
+    "Telefone",
+    "Email",
+    "Origem",
+    "Vendedor",
+    "Veiculo",
+    "Estagio",
+    "Valor",
+    "Observacao",
+    "Resumo Qualificacao",
+    "Resumo Comercial",
+    "Criado em",
+    "Atualizado em",
+  ]
+
+  const rows = leads.map((lead) => [
+    lead.id,
+    lead.nome_lead,
+    lead.telefone,
+    lead.email,
+    lead.origem,
+    lead.vendedor,
+    lead.veiculo_interesse,
+    ESTAGIO_LABELS[lead.estagio_lead as keyof typeof ESTAGIO_LABELS] || lead.estagio_lead,
+    lead.valor || 0,
+    lead.observacao_vendedor,
+    lead.resumo_qualificacao,
+    lead.resumo_comercial,
+    lead.created_at ? new Date(lead.created_at).toLocaleString("pt-BR") : "",
+    lead.updated_at ? new Date(lead.updated_at).toLocaleString("pt-BR") : "",
+  ])
+
+  const csv = [headers, ...rows].map((row) => row.map(escapeCsvValue).join(";")).join("\n")
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 export async function updateLeadStage(leadId: number, newStage: string): Promise<boolean> {
   // Validar se o estágio é válido
   if (!VALID_ESTAGIOS.includes(newStage)) {

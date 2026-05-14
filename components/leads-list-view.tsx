@@ -10,7 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { type Lead, ESTAGIO_LABELS, ESTAGIO_COLORS, updateLeadStage, generateResumoComercial } from "@/lib/leads"
+import {
+  type Lead,
+  ESTAGIO_LABELS,
+  ESTAGIO_COLORS,
+  updateLeadStage,
+  generateResumoComercial,
+  exportLeadsCsv,
+} from "@/lib/leads"
 import {
   Search,
   Filter,
@@ -26,6 +33,7 @@ import {
   Sparkles,
   Loader2,
   RefreshCw,
+  Download,
 } from "lucide-react"
 import { EditableValueField } from "./editable-value-field"
 import { EditableObservacaoField } from "./editable-observacao-field"
@@ -46,6 +54,8 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterOrigem, setFilterOrigem] = useState("")
   const [filterEstagio, setFilterEstagio] = useState("")
+  const [dataInicio, setDataInicio] = useState("")
+  const [dataFim, setDataFim] = useState("")
   const [updatingStage, setUpdatingStage] = useState<number | null>(null)
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -53,7 +63,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
 
   React.useEffect(() => {
     filterLeads()
-  }, [leads, searchTerm, filterOrigem, filterEstagio])
+  }, [leads, searchTerm, filterOrigem, filterEstagio, dataInicio, dataFim])
 
   const filterLeads = () => {
     let filtered = [...leads]
@@ -73,6 +83,16 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
 
     if (filterEstagio && filterEstagio !== "all") {
       filtered = filtered.filter((lead) => lead.estagio_lead === filterEstagio)
+    }
+
+    if (dataInicio) {
+      const startDate = new Date(`${dataInicio}T00:00:00`)
+      filtered = filtered.filter((lead) => new Date(lead.created_at) >= startDate)
+    }
+
+    if (dataFim) {
+      const endDate = new Date(`${dataFim}T23:59:59.999`)
+      filtered = filtered.filter((lead) => new Date(lead.created_at) <= endDate)
     }
 
     setFilteredLeads(filtered)
@@ -258,7 +278,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -294,6 +314,24 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
                 ))}
               </SelectContent>
             </Select>
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">Data Inicio</label>
+              <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">Data Fim</label>
+              <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="self-end gap-2"
+              onClick={() => exportLeadsCsv(filteredLeads, "negociacoes.csv")}
+              disabled={filteredLeads.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
+            </Button>
           </div>
         </CardContent>
       </Card>

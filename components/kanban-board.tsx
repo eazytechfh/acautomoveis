@@ -21,6 +21,7 @@ import {
   ESTAGIO_COLORS,
   VALID_ESTAGIOS,
   formatCurrency,
+  exportLeadsCsv,
 } from "@/lib/leads"
 import { getCurrentUser } from "@/lib/auth"
 import {
@@ -41,6 +42,7 @@ import {
   Move,
   AlertTriangle,
   Trash2,
+  Download,
 } from "lucide-react"
 import { LeadsListView } from "./leads-list-view"
 import { EditableValueField } from "./editable-value-field"
@@ -69,6 +71,8 @@ export function KanbanBoard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterOrigem, setFilterOrigem] = useState("")
   const [filterEstagio, setFilterEstagio] = useState("")
+  const [dataInicio, setDataInicio] = useState("")
+  const [dataFim, setDataFim] = useState("")
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban")
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -83,7 +87,7 @@ export function KanbanBoard() {
 
   useEffect(() => {
     filterLeads()
-  }, [leads, searchTerm, filterOrigem, filterEstagio])
+  }, [leads, searchTerm, filterOrigem, filterEstagio, dataInicio, dataFim])
 
   const loadLeads = async () => {
     const user = getCurrentUser()
@@ -112,6 +116,16 @@ export function KanbanBoard() {
 
     if (filterEstagio && filterEstagio !== "all") {
       filtered = filtered.filter((lead) => lead.estagio_lead === filterEstagio)
+    }
+
+    if (dataInicio) {
+      const startDate = new Date(`${dataInicio}T00:00:00`)
+      filtered = filtered.filter((lead) => new Date(lead.created_at) >= startDate)
+    }
+
+    if (dataFim) {
+      const endDate = new Date(`${dataFim}T23:59:59.999`)
+      filtered = filtered.filter((lead) => new Date(lead.created_at) <= endDate)
     }
 
     setFilteredLeads(filtered)
@@ -461,7 +475,7 @@ export function KanbanBoard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -497,6 +511,24 @@ export function KanbanBoard() {
                     ))}
                   </SelectContent>
                 </Select>
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">Data Inicio</label>
+                  <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">Data Fim</label>
+                  <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="self-end gap-2"
+                  onClick={() => exportLeadsCsv(filteredLeads, "negociacoes.csv")}
+                  disabled={filteredLeads.length === 0}
+                >
+                  <Download className="h-4 w-4" />
+                  Exportar CSV
+                </Button>
               </div>
             </CardContent>
           </Card>
