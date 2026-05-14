@@ -218,6 +218,34 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
   const leadsPaginados = filteredLeads.slice(inicioPagina, inicioPagina + LEADS_POR_PAGINA)
   const primeiroItem = filteredLeads.length === 0 ? 0 : inicioPagina + 1
   const ultimoItem = Math.min(inicioPagina + LEADS_POR_PAGINA, filteredLeads.length)
+  const paginationControls =
+    filteredLeads.length > 0 ? (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-gray-600">
+          Página {paginaAtualSegura} de {totalPaginas} · {LEADS_POR_PAGINA} por página
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPaginaAtual((pagina) => Math.max(1, pagina - 1))}
+            disabled={paginaAtualSegura === 1}
+          >
+            Anterior
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setPaginaAtual((pagina) => Math.min(totalPaginas, pagina + 1))}
+            disabled={paginaAtualSegura === totalPaginas}
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
+    ) : null
 
   return (
     <div className="space-y-6">
@@ -299,7 +327,10 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
       {/* Lista de Leads */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Leads ({filteredLeads.length})</CardTitle>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <CardTitle>Lista de Leads ({filteredLeads.length})</CardTitle>
+            {paginationControls}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -405,29 +436,7 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
               <p className="text-sm text-gray-600">
                 Mostrando {primeiroItem}-{ultimoItem} de {filteredLeads.length} leads
               </p>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPaginaAtual((pagina) => Math.max(1, pagina - 1))}
-                  disabled={paginaAtualSegura === 1}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-gray-600">
-                  Página {paginaAtualSegura} de {totalPaginas} · {LEADS_POR_PAGINA} por página
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPaginaAtual((pagina) => Math.min(totalPaginas, pagina + 1))}
-                  disabled={paginaAtualSegura === totalPaginas}
-                >
-                  Próxima
-                </Button>
-              </div>
+              {paginationControls}
             </div>
           )}
         </CardContent>
